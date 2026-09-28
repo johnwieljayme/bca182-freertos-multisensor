@@ -177,14 +177,14 @@ extern "C" void TIM4_IRQHandler(void)
     }
 }
 
-void TaskA(void *pvParameters)
+void SensorTask(void *pvParameters)
 {
     (void)pvParameters;
     TickType_t xLastWakeTime = xTaskGetTickCount();
     
     for (;;)
     {
-        UartPrintUInt("Task A running @tick ", (unsigned long)xTaskGetTickCount());
+        UartPrintUInt("SensorTask running @tick ", (unsigned long)xTaskGetTickCount());
         
         DHT22_Data_t dhtData = DHT22_Read();
         if (dhtData.valid)
@@ -200,7 +200,8 @@ void TaskA(void *pvParameters)
         float lightPercent = LDR_Read_Percent();
         UartPrintFloat("Light Level: ", lightPercent, " %");
 
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+        // Use periodic execution every 2 seconds as required by the laboratory
+        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(2000));
     }
 }
 
@@ -235,10 +236,11 @@ int main(void)
 
     UartPrint("BCA182 FreeRTOS Multisensor\r\nSystem starting...\r\n");
 
-    BaseType_t okA = xTaskCreate(TaskA, "TaskA", 256, NULL, 1, NULL);
+    // SensorTask elevated to Priority 2 per the laboratory manual
+    BaseType_t okSensor = xTaskCreate(SensorTask, "SensorTask", 256, NULL, 2, NULL);
     BaseType_t okB = xTaskCreate(TaskB, "TaskB", 256, NULL, 1, NULL);
 
-    (void)okA;
+    (void)okSensor;
     (void)okB;
 
     vTaskStartScheduler();
