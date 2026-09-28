@@ -93,8 +93,11 @@ the cross-file `unusedFunction` suppression are documented in
 Open the project in VS Code and start `Wokwi: Start Simulator`. The circuit
 definition is [diagram.json](diagram.json), and firmware paths are in
 [wokwi.toml](wokwi.toml). Current-project interaction tests are listed in
-[docs/test-plan.md](docs/test-plan.md); simulator-only results remain pending
-until observed on this build.
+[docs/test-plan.md](docs/test-plan.md). A 2026-09-29 run confirmed 8 MHz
+core/APB clocks, successful OLED I2C init/address probe, OLED rendering of
+the HUMIDITY page, task startup, and an INACTIVE state transition. Sensor
+value changes, full encoder wraparound, alarm/buzzer behavior, PIR
+reactivation, and the visual INACTIVE behavior still need verification.
 
 The current circuit and finished-system screenshots still need to be captured
 for the portfolio README/report. The supplied reference screenshots belong to
