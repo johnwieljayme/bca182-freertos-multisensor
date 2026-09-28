@@ -1,34 +1,19 @@
 {
   "version": 1,
-  "author": "John Wiel F. Jayme",
+  "author": "BCA182 Student",
   "editor": "wokwi",
   "parts": [
     {
       "type": "board-stm32-bluepill",
-      "id": "bluepill",
+      "id": "stm32",
       "top": 0,
       "left": 0,
-      "attrs": {
-        "builder": "platformio-stm32"
-      }
+      "attrs": {}
     }
   ],
   "connections": [
-    [
-      "bluepill:A9",
-      "$serialMonitor:RX",
-      "green",
-      []
-    ],
-    [
-      "bluepill:A10",
-      "$serialMonitor:TX",
-      "green",
-      []
-    ]
+    [ "$serialMonitor:TX", "stm32:A10", "", [] ],
+    [ "$serialMonitor:RX", "stm32:A9", "", [] ]
   ],
-  "serialMonitor": {
-    "display": "terminal",
-    "newline": "lf"
-  }
+  "dependencies": {}
 }
