@@ -1,0 +1,14 @@
+flowchart TD
+    Board[STM32F103C8 Blue Pill] --> Sensor[SensorTask: DHT22 + LDR]
+    Board --> Input[InputTask: rotary encoder]
+    Board --> Motion[MotionTask: PIR]
+    Sensor --> DisplayQueue[xDisplayQueue]
+    Sensor --> AlarmQueue[xAlarmQueue]
+    Input --> ModeQueue[xModeQueue]
+    DisplayQueue --> Display[DisplayTask: SSD1306]
+    ModeQueue --> Display
+    AlarmQueue --> Alarm[AlarmTask: temperature limits]
+    Alarm --> Buzzer[TIM1_CH1 buzzer]
+    Motion --> Events[xSystemEvents]
+    State[StateTask: ACTIVE / INACTIVE] <--> Events
+    Display --> OLED[OLED PB6 / PB7]

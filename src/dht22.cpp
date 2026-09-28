@@ -1,7 +1,7 @@
 #include "dht22.h"
 
 // Resolved GCC 7.2.1 constexpr strictness by using a const pointer
-GPIO_TypeDef * const DHT_PORT = GPIOB;
+GPIO_TypeDef * const DHT_PORT = GPIOA;
 const uint16_t DHT_PIN = GPIO_PIN_0;
 
 static void DWT_Init(void)
@@ -38,7 +38,7 @@ static void Set_Pin_Input(GPIO_TypeDef *port, uint16_t pin)
 
 void DHT22_Init(void)
 {
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
     DWT_Init();
     Set_Pin_Output(DHT_PORT, DHT_PIN);
     HAL_GPIO_WritePin(DHT_PORT, DHT_PIN, GPIO_PIN_SET);

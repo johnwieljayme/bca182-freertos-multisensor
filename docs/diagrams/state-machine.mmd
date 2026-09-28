@@ -1,0 +1,6 @@
+stateDiagram-v2
+    [*] --> ACTIVE
+    ACTIVE --> INACTIVE: no motion for 15 seconds
+    INACTIVE --> ACTIVE: PIR motion detected
+    ACTIVE: sensing, alarm, encoder, OLED enabled
+    INACTIVE: PIR monitoring continues; sampling/display/alarm paused

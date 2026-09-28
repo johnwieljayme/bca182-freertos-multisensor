@@ -1,0 +1,11 @@
+flowchart LR
+    SensorTask -->|overwrite latest sample| xDisplayQueue --> DisplayTask
+    SensorTask -->|independent latest sample| xAlarmQueue --> AlarmTask
+    InputTask -->|overwrite selected mode| xModeQueue --> DisplayTask
+    xDisplayQueue -. queue set .-> xDisplayEvents[xDisplayEvents]
+    xModeQueue -. queue set .-> xDisplayEvents
+    DisplayTask -->|owns I2C writes| OLED[SSD1306]
+    MotionTask -->|set or clear MOTION| Events[xSystemEvents]
+    StateTask -->|set or clear ACTIVE| Events
+    AlarmTask -->|set or clear ALARM| Events
+    AnyTask[Any task logging] -->|one complete line| Mutex[serialMutex] --> UART[USART1]
