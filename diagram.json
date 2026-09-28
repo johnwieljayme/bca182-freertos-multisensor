@@ -9,11 +9,30 @@
       "top": 0,
       "left": 0,
       "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": 50,
+      "left": 150,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 10,
+      "left": 200,
+      "attrs": { "value": "4700" }
     }
   ],
   "connections": [
     [ "$serialMonitor:TX", "stm32:A10", "", [] ],
-    [ "$serialMonitor:RX", "stm32:A9", "", [] ]
+    [ "$serialMonitor:RX", "stm32:A9", "", [] ],
+    [ "stm32:3.3", "dht1:VCC", "red", [] ],
+    [ "stm32:G", "dht1:GND", "black", [] ],
+    [ "stm32:B0", "dht1:SDA", "green", [] ],
+    [ "stm32:3.3", "r1:1", "red", [] ],
+    [ "stm32:B0", "r1:2", "green", [] ]
   ],
   "dependencies": {}
 }
