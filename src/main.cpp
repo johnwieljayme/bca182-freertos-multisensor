@@ -4,6 +4,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "dht22.h"
+#include "ldr.h"
 
 UART_HandleTypeDef huart1;
 extern "C" uint32_t g_pfnVectors[];
@@ -196,6 +197,9 @@ void TaskA(void *pvParameters)
             UartPrint("DHT22 Read Failed\r\n");
         }
 
+        float lightPercent = LDR_Read_Percent();
+        UartPrintFloat("Light Level: ", lightPercent, " %");
+
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
     }
 }
@@ -227,6 +231,7 @@ int main(void)
     MX_USART1_UART_Init();
     Heartbeat_GPIO_Init();
     DHT22_Init();
+    LDR_Init();
 
     UartPrint("BCA182 FreeRTOS Multisensor\r\nSystem starting...\r\n");
 
