@@ -3,11 +3,16 @@
 #include <stdint.h>
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 #include "dht22.h"
 #include "ldr.h"
+#include "rtos_objects.h"
 
 UART_HandleTypeDef huart1;
 extern "C" uint32_t g_pfnVectors[];
+
+// Instantiate the global queue handle
+QueueHandle_t xSensorQueue = NULL;
 
 void SystemClock_Config(void);
 static void MX_USART1_UART_Init(void);
@@ -120,25 +125,13 @@ extern "C" void hard_fault_handler_c(unsigned long *stack)
             for (volatile int d = 0; d < 300000; d++) {}
         }
         for (volatile int d = 0; d < 2000000; d++) {}
-
-        UartPrint("\r\n[HARDFAULT] PC=");
-        UartPrintUInt("", pc);
-        UartPrint("[HARDFAULT] LR=");
-        UartPrintUInt("", lr);
-        UartPrint("[HARDFAULT] CFSR=");
-        UartPrintUInt("", cfsr);
-        UartPrint("[HARDFAULT] HFSR=");
-        UartPrintUInt("", hfsr);
     }
 }
 
 extern "C" void vAssertCalled(const char* file, int line)
 {
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-    UartPrint("\r\n[ASSERT FAILED] ");
-    UartPrint(file);
-    UartPrint(" line: ");
-    UartPrintUInt("", (unsigned long)line);
+    UartPrint("\r\n[ASSERT FAILED]\r\n");
     for (;;) {}
 }
 
@@ -184,23 +177,24 @@ void SensorTask(void *pvParameters)
     
     for (;;)
     {
-        UartPrintUInt("SensorTask running @tick ", (unsigned long)xTaskGetTickCount());
+        struct SensorData data = {0};
         
         DHT22_Data_t dhtData = DHT22_Read();
         if (dhtData.valid)
         {
-            UartPrintFloat("Temperature: ", dhtData.temperature, " C");
-            UartPrintFloat("Humidity: ", dhtData.humidity, " %");
-        }
-        else
-        {
-            UartPrint("DHT22 Read Failed\r\n");
+            data.temperature = dhtData.temperature;
+            data.humidity = dhtData.humidity;
         }
 
-        float lightPercent = LDR_Read_Percent();
-        UartPrintFloat("Light Level: ", lightPercent, " %");
+        // LDR percent is cast to an int to match the lab struct specification
+        data.lightLevel = (int)LDR_Read_Percent();
+        data.motionDetected = false; // PIR not yet implemented
+        
+        UartPrintUInt("\r\nSensorTask posting data @tick ", (unsigned long)xTaskGetTickCount());
+        
+        // Send the struct to the queue. Wait time is 0 (do not block if full).
+        xQueueSend(xSensorQueue, &data, 0);
 
-        // Use periodic execution every 2 seconds as required by the laboratory
         vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(2000));
     }
 }
@@ -208,14 +202,18 @@ void SensorTask(void *pvParameters)
 void TaskB(void *pvParameters)
 {
     (void)pvParameters;
-    
-    vTaskDelay(pdMS_TO_TICKS(500));
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    struct SensorData receivedData;
     
     for (;;)
     {
-        UartPrintUInt("Task B running @tick ", (unsigned long)xTaskGetTickCount());
-        vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
+        // Block indefinitely (portMAX_DELAY) until SensorTask pushes data into the queue
+        if (xQueueReceive(xSensorQueue, &receivedData, portMAX_DELAY) == pdPASS)
+        {
+            UartPrintUInt("TaskB received data @tick ", (unsigned long)xTaskGetTickCount());
+            UartPrintFloat("Temperature: ", receivedData.temperature, " C");
+            UartPrintFloat("Humidity: ", receivedData.humidity, " %");
+            UartPrintUInt("Light Level (%): ", (unsigned long)receivedData.lightLevel);
+        }
     }
 }
 
@@ -236,7 +234,10 @@ int main(void)
 
     UartPrint("BCA182 FreeRTOS Multisensor\r\nSystem starting...\r\n");
 
-    // SensorTask elevated to Priority 2 per the laboratory manual
+    // Initialize the queue to hold up to 5 SensorData structs
+    xSensorQueue = xQueueCreate(5, sizeof(struct SensorData));
+    configASSERT(xSensorQueue != NULL);
+
     BaseType_t okSensor = xTaskCreate(SensorTask, "SensorTask", 256, NULL, 2, NULL);
     BaseType_t okB = xTaskCreate(TaskB, "TaskB", 256, NULL, 1, NULL);
 
