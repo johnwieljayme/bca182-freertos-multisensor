@@ -12,6 +12,12 @@ static uint8_t SSD1306_Buffer[1024];
 #define SSD1306_CTRL_DATA 0x40
 
 static bool oledBusReady;
+static HAL_StatusTypeDef oledInitStatus;
+static uint32_t oledInitError;
+static HAL_StatusTypeDef oledProbeStatus;
+static uint32_t oledProbeError;
+static HAL_StatusTypeDef oledTransferStatus;
+static uint32_t oledTransferError;
 
 // Minimal 5x7 ASCII font (characters 32 to 127)
 static const uint8_t font5x7[96][5] = {
@@ -43,7 +49,11 @@ static const uint8_t font5x7[96][5] = {
 
 static HAL_StatusTypeDef WriteCmd(uint8_t cmd) {
     uint8_t data[2] = {SSD1306_CTRL_CMD, cmd};
-    return HAL_I2C_Master_Transmit(&oled_i2c, OLED_ADDR, data, sizeof(data), 100);
+    oledTransferStatus = HAL_I2C_Master_Transmit(&oled_i2c, OLED_ADDR, data, sizeof(data), 100);
+    if (oledTransferStatus != HAL_OK) {
+        oledTransferError = HAL_I2C_GetError(&oled_i2c);
+    }
+    return oledTransferStatus;
 }
 
 void display_init(void) {
@@ -66,13 +76,27 @@ void display_init(void) {
     oled_i2c.Init.OwnAddress2 = 0;
     oled_i2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     oled_i2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    oledBusReady = HAL_I2C_Init(&oled_i2c) == HAL_OK;
+    oledInitStatus = HAL_I2C_Init(&oled_i2c);
+    oledInitError = HAL_I2C_GetError(&oled_i2c);
+    oledBusReady = oledInitStatus == HAL_OK;
 }
 
 static bool Controller_Init(void) {
     vTaskDelay(pdMS_TO_TICKS(100));
 
-    if (!oledBusReady || HAL_I2C_IsDeviceReady(&oled_i2c, OLED_ADDR, 3, 100) != HAL_OK) {
+    oledProbeStatus = oledBusReady
+        ? HAL_I2C_IsDeviceReady(&oled_i2c, OLED_ADDR, 3, 100)
+        : HAL_ERROR;
+    oledProbeError = HAL_I2C_GetError(&oled_i2c);
+
+    char diagnostic[128];
+    snprintf(diagnostic, sizeof(diagnostic),
+             "DISPLAY: I2C init=%d err=0x%08lX probe=%d err=0x%08lX",
+             (int)oledInitStatus, (unsigned long)oledInitError,
+             (int)oledProbeStatus, (unsigned long)oledProbeError);
+    log_line(diagnostic);
+
+    if (!oledBusReady || oledProbeStatus != HAL_OK) {
         return false;
     }
 
@@ -99,7 +123,9 @@ static bool Display_Update(void) {
     chunk[0] = SSD1306_CTRL_DATA;
     for (uint16_t offset = 0; offset < sizeof(SSD1306_Buffer); offset += 128) {
         memcpy(&chunk[1], &SSD1306_Buffer[offset], 128);
-        if (HAL_I2C_Master_Transmit(&oled_i2c, OLED_ADDR, chunk, sizeof(chunk), 100) != HAL_OK) {
+        oledTransferStatus = HAL_I2C_Master_Transmit(&oled_i2c, OLED_ADDR, chunk, sizeof(chunk), 100);
+        if (oledTransferStatus != HAL_OK) {
+            oledTransferError = HAL_I2C_GetError(&oled_i2c);
             return false;
         }
     }
@@ -204,7 +230,11 @@ void DisplayTask(void *pvParameters) {
         if (!active) {
             if (changed && !blanked) {
                 if (!Clear_Screen() && !writeErrorLogged) {
-                    log_line("DISPLAY: OLED I2C write failed");
+                    char diagnostic[96];
+                    snprintf(diagnostic, sizeof(diagnostic),
+                             "DISPLAY: OLED write failed status=%d err=0x%08lX",
+                             (int)oledTransferStatus, (unsigned long)oledTransferError);
+                    log_line(diagnostic);
                     writeErrorLogged = true;
                 }
                 blanked = true;
@@ -220,7 +250,11 @@ void DisplayTask(void *pvParameters) {
                                 ? "ALARM LOW" : "ALARM HIGH";
             }
             if (!Draw_Screen(mode, &sample, motion, alarmText) && !writeErrorLogged) {
-                log_line("DISPLAY: OLED I2C write failed");
+                char diagnostic[96];
+                snprintf(diagnostic, sizeof(diagnostic),
+                         "DISPLAY: OLED write failed status=%d err=0x%08lX",
+                         (int)oledTransferStatus, (unsigned long)oledTransferError);
+                log_line(diagnostic);
                 writeErrorLogged = true;
             }
         }
