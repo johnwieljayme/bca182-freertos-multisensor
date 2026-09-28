@@ -1,5 +1,7 @@
 #include "stm32f1xx_hal.h"
 
+#include <stdio.h>
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -31,8 +33,18 @@ int main(void)
 void app_main(void)
 {
     serial_log_init();
+    SystemCoreClockUpdate();
     log_line("BCA182 FreeRTOS Multisensor");
     log_line("System starting...");
+
+    char clockLine[96];
+    snprintf(clockLine, sizeof(clockLine),
+             "CLOCK: core=%lu HCLK=%lu PCLK1=%lu PCLK2=%lu Hz",
+             (unsigned long)SystemCoreClock,
+             (unsigned long)HAL_RCC_GetHCLKFreq(),
+             (unsigned long)HAL_RCC_GetPCLK1Freq(),
+             (unsigned long)HAL_RCC_GetPCLK2Freq());
+    log_line(clockLine);
 
     sensors_init();
     motion_init();
@@ -106,20 +118,5 @@ extern "C" void vApplicationStackOverflowHook(TaskHandle_t task, char *taskName)
 
 static void SystemClock_Config(void)
 {
-    RCC_OscInitTypeDef oscillator = {0};
-    RCC_ClkInitTypeDef clock = {0};
-
-    oscillator.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-    oscillator.HSIState = RCC_HSI_ON;
-    oscillator.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-    oscillator.PLL.PLLState = RCC_PLL_NONE;
-    HAL_RCC_OscConfig(&oscillator);
-
-    clock.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-                      RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-    clock.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-    clock.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    clock.APB1CLKDivider = RCC_HCLK_DIV1;
-    clock.APB2CLKDivider = RCC_HCLK_DIV1;
-    HAL_RCC_ClockConfig(&clock, FLASH_LATENCY_0);
+    /* Match Wokwi's reset clock and the reference project: HSI at 8 MHz. */
 }
