@@ -54,6 +54,7 @@
       "id": "encoder1",
       "top": 340,
       "left": 330,
+      "rotate": 180,
       "attrs": {}
     },
     {
@@ -103,24 +104,14 @@
       []
     ],
     [
-      "stm32:A0",
+      "dht1:SDA",
       "r1:2",
       "green",
       []
     ],
 
-    [
-      "stm32:3V3.2",
-      "ldr1:VCC",
-      "red",
-      []
-    ],
-    [
-      "stm32:GND.2",
-      "ldr1:GND",
-      "black",
-      []
-    ],
+    [ "dht1:VCC", "ldr1:VCC", "red", [] ],
+    [ "dht1:GND", "ldr1:GND", "black", [] ],
     [
       "stm32:A1",
       "ldr1:AO",
@@ -152,15 +143,15 @@
       "green",
       []
     ],
-    [ "stm32:3V3.1", "pir1:VCC", "red", [] ],
-    [ "stm32:GND.1", "pir1:GND", "black", [] ],
+    [ "ldr1:VCC", "pir1:VCC", "red", [] ],
+    [ "ldr1:GND", "pir1:GND", "black", [] ],
     [ "stm32:A2", "pir1:OUT", "purple", [] ],
-    [ "stm32:3V3.1", "encoder1:VCC", "red", [] ],
-    [ "stm32:GND.1", "encoder1:GND", "black", [] ],
+    [ "pir1:VCC", "encoder1:VCC", "red", [] ],
+    [ "pir1:GND", "encoder1:GND", "black", [] ],
     [ "stm32:A3", "encoder1:CLK", "cyan", [] ],
     [ "stm32:A4", "encoder1:DT", "magenta", [] ],
     [ "stm32:A5", "encoder1:SW", "white", [] ],
-    [ "stm32:GND.1", "buzzer1:1", "black", [] ],
+    [ "encoder1:GND", "buzzer1:1", "black", [] ],
     [ "stm32:A8", "buzzer1:2", "red", []
     ]
   ],
