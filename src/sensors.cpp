@@ -1,5 +1,7 @@
 #include "sensors.h"
 
+#include <stdio.h>
+
 #include "stm32f1xx_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -9,6 +11,14 @@
 #include "serial_log.h"
 
 static constexpr uint32_t kSensorPeriodMs = 2000;
+
+static void format_fixed_2(char *out, size_t size, float value)
+{
+    int scaled = (int)(value * 100.0f + (value >= 0.0f ? 0.5f : -0.5f));
+    int magnitude = scaled < 0 ? -scaled : scaled;
+    snprintf(out, size, "%s%d.%02d", scaled < 0 ? "-" : "",
+             magnitude / 100, magnitude % 100);
+}
 
 void sensors_init(void)
 {
@@ -60,5 +70,16 @@ void SensorTask(void *pvParameters)
 
         xQueueOverwrite(xDisplayQueue, &sample);
         xQueueOverwrite(xAlarmQueue, &sample);
+
+        char temperature[16];
+        char humidity[16];
+        char line[112];
+        format_fixed_2(temperature, sizeof(temperature), sample.temperature);
+        format_fixed_2(humidity, sizeof(humidity), sample.humidity);
+        snprintf(line, sizeof(line),
+                 "Temperature: %s C, Humidity: %s %%, Light: %d %%, Motion: %s",
+                 temperature, humidity, sample.lightLevel,
+                 sample.motionDetected ? "yes" : "no");
+        log_line(line);
     }
 }
