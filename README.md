@@ -184,4 +184,4 @@ Complete the remaining Wokwi tests and required FreeRTOS fault experiments, reco
 - [STM32F1 HAL and CMSIS documentation](https://www.st.com/en/embedded-software/stm32cubef1.html)
 - [Wokwi STM32 Blue Pill reference](https://docs.wokwi.com/parts/board-stm32-bluepill)
 - [Unity test framework](https://github.com/ThrowTheSwitch/Unity)
-- The task decomposition and Wokwi test workflow were informed by [a peer's BCA182 implementation](https://github.com/pauul14/bca182-freertos-multisensor), which the author permitted us to consult. This README's wording and the verification statements above are specific to this repository.
+
