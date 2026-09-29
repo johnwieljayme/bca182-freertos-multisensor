@@ -110,7 +110,7 @@ stateDiagram-v2
 include/       Module APIs, RTOS configuration, and port macros
 src/           HAL drivers, six tasks, and hardware-independent logic
 lib/           PlatformIO library metadata
-test/         Native Unity test suites
+test/          Native Unity test suites
 docs/          Design notes, verification, static analysis, and diagrams
 platformio.ini PlatformIO build, native-test, and analysis environments
 diagram.json   Wokwi circuit
