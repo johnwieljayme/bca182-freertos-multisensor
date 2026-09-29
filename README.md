@@ -10,7 +10,7 @@ This project implements the BCA182 multisensor laboratory on an STM32F103C8T6 Bl
 
 - DHT22 temperature and humidity samples every 2 seconds.
 - LDR ambient-light reading reported as relative percent, not lux.
-- OLED dashboard showing temperature, humidity, light, and motion together; the encoder highlights the selected row.
+- OLED display shows one selected measurement at a time: temperature, humidity, light, or motion.
 - KY-040 rotary encoder navigation.
 - PIR motion tracking with ACTIVE and INACTIVE modes.
 - Temperature alarm outside 18.0-30.0 C, with a 1 kHz PWM buzzer.
@@ -38,7 +38,7 @@ flowchart TD
     AnyTask[Any task] --> Log[serialMutex then USART1]
 ```
 
-Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Captured circuit and finished-system screenshots have not yet been added.
+Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). The required project-specific circuit image, system architecture diagram, FreeRTOS task-communication diagram, state-machine diagram, and finished-system screenshot still need to be added.
 
 ## FreeRTOS Architecture
 
@@ -155,14 +155,26 @@ The latest recorded cppcheck run passed with zero high- and medium-severity find
 
 ## Functional Verification
 
-On 2026-09-29, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, and an INACTIVE transition after 15 seconds without motion. The user later confirmed the OLED dashboard was working. Sensor readings continue to be logged every 2 seconds without a `Sample:` prefix, as well as sent to the display and alarm queues.
+Wokwi functional verification FT-01 through FT-10 was completed on 2026-09-29. The tests covered temperature, humidity, light, clockwise and counterclockwise encoder navigation with wraparound, HIGH and LOW temperature alarms, PIR activation, the 15-second inactivity timeout, and PIR reactivation while INACTIVE.
 
-That run did not verify every expected effect. Sensor control changes, full encoder wraparound, alarm/buzzer behavior, PIR reactivation, dashboard rendering, and visual OLED blank/resume behavior are still partial or pending. The evidence table is maintained in [docs/test-plan.md](docs/test-plan.md); do not treat reference-project results as results from this firmware.
+Observed results included:
+- FT-01: DHT22 temperature set to 25 C produced `Temperature: 25.00 C` and the OLED matched.
+- FT-02: DHT22 humidity produced `Humidity: 63.50 %` and the OLED matched.
+- FT-03: LDR/light values changed correctly, including a 4% reading.
+- FT-04: Clockwise navigation cycled HUMIDITY -> LIGHT -> MOTION -> TEMPERATURE with wraparound.
+- FT-05: Counterclockwise navigation reversed the order with wraparound.
+- FT-06: 31 C produced a HIGH alarm and buzzer activation; returning to 20.30 C cleared the alarm.
+- FT-07: Returning to the normal temperature range stopped the alarm and buzzer.
+- FT-08: PIR motion changed the system from INACTIVE to ACTIVE and reported motion.
+- FT-09: With no motion, the system entered INACTIVE after 15 seconds.
+- FT-10: PIR motion while INACTIVE returned the system to ACTIVE.
+
+The verification record is maintained in [docs/test-plan.md](docs/test-plan.md). These results are based on observed behavior of this repository's Wokwi firmware, not the reference project.
 
 ## Engineering Decisions
 
 - The system retains the STM32 reset HSI clock at 8 MHz; APB1 therefore meets the STM32F1 I2C peripheral's minimum clock requirement.
-- The OLED shows all four readings at once and uses the encoder marker to indicate the selected item. This is a deliberate deviation from FR-05's single-measurement-at-a-time requirement; confirm that dashboard behavior is acceptable for grading.
+- The OLED is owned by DisplayTask and displays one selected measurement at a time, matching the FR-05 single-measurement display requirement.
 - HAL uses TIM4 for its 1 ms tick; FreeRTOS owns SysTick through the project Cortex-M3 port.
 - The OLED is only written by DisplayTask, and the UART logger holds its mutex for one complete line.
 - SensorTask skips a failed DHT22 sample instead of publishing invalid values.
@@ -171,12 +183,12 @@ That run did not verify every expected effect. Sensor control changes, full enco
 ## Limitations
 
 - A DHT22 checksum or timing failure skips that sample; the next periodic read retries.
-- Wokwi functional coverage is incomplete, despite successful build and native tests.
-- Circuit/finished-system screenshots and the separate laboratory report PDF have not been added.
+- The required README circuit image, system architecture visual, FreeRTOS task-communication visual, state-machine visual, and finished-system screenshot still need to be captured or added.
+- The separate laboratory report PDF and portfolio publication have not yet been added.
 
 ## Future Improvements
 
-Complete the remaining Wokwi tests and required FreeRTOS fault experiments, record their observed results, capture project-specific screenshots, generate the laboratory report, and prepare the portfolio publication.
+Capture and add the required project-specific README visuals, keep the verification record synchronized with observed runs, generate the separate laboratory report, and prepare the portfolio publication.
 
 ## References and Acknowledgments
 
