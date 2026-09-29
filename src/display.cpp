@@ -160,31 +160,43 @@ static void Draw_Tenths(char *out, size_t size, float value, const char *unit) {
 static bool Draw_Screen(DisplayMode mode, const SensorData *sample,
                         bool motion, bool active, const char *alarmText) {
     memset(SSD1306_Buffer, 0, sizeof(SSD1306_Buffer));
+
+    // Header
     DrawString(28, 0, "ROOM MONITOR");
 
-    char value[24];
-    char line[32];
+    char value[32];
 
-    Draw_Tenths(value, sizeof(value), sample->temperature, "C");
-    snprintf(line, sizeof(line), "%cTEMP %s",
-             mode == DisplayMode::TEMPERATURE ? '>' : ' ', value);
-    DrawString(8, 8, line);
+    // Show only the currently selected measurement
+    DrawString(8, 16, displayModeLabel(mode));
 
-    Draw_Tenths(value, sizeof(value), sample->humidity, "%");
-    snprintf(line, sizeof(line), "%cHUM %s",
-             mode == DisplayMode::HUMIDITY ? '>' : ' ', value);
-    DrawString(8, 16, line);
+    switch (mode) {
+        case DisplayMode::TEMPERATURE:
+            Draw_Tenths(value, sizeof(value), sample->temperature, "C");
+            break;
 
-    snprintf(line, sizeof(line), "%cLIGHT %d %%",
-             mode == DisplayMode::LIGHT ? '>' : ' ', sample->lightLevel);
-    DrawString(8, 24, line);
+        case DisplayMode::HUMIDITY:
+            Draw_Tenths(value, sizeof(value), sample->humidity, "%");
+            break;
 
-    snprintf(line, sizeof(line), "%cMOTION %s",
-             mode == DisplayMode::MOTION ? '>' : ' ', motion ? "DETECTED" : "CLEAR");
-    DrawString(8, 32, line);
+        case DisplayMode::LIGHT:
+            snprintf(value, sizeof(value), "%d %%", sample->lightLevel);
+            break;
 
-    DrawString(8, 40, active ? "STATE ACTIVE" : "STATE INACTIVE");
-    DrawString(8, 48, alarmText != NULL ? alarmText : "ALARM NORMAL");
+        case DisplayMode::MOTION:
+            snprintf(value, sizeof(value),
+                     "%s", motion ? "DETECTED" : "CLEAR");
+            break;
+    }
+
+    // Selected measurement value
+    DrawString(8, 28, value);
+
+    // System status
+    DrawString(8, 44, active ? "STATE ACTIVE" : "STATE INACTIVE");
+
+    // Alarm status
+    DrawString(8, 56, alarmText != NULL ? alarmText : "ALARM NORMAL");
+
     return Display_Update();
 }
 
