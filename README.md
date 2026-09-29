@@ -1,121 +1,186 @@
-# BCA182 FreeRTOS Multisensor
+# BCA182 FreeRTOS Room Monitor
 
-STM32 Blue Pill room monitor built with PlatformIO, STM32Cube HAL, and native
-FreeRTOS APIs. The Wokwi circuit measures temperature, humidity, and relative
-light, detects motion, supports rotary-encoder navigation, displays one value
-on an SSD1306 OLED, and sounds a temperature alarm.
+A simulated STM32 Blue Pill monitors temperature, humidity, relative light, and motion. FreeRTOS tasks move sensor data to an OLED and temperature alarm, while a rotary encoder selects the measurement shown. The firmware uses PlatformIO, STM32Cube HAL, and native FreeRTOS APIs.
+
+## Project Overview
+
+This project implements the BCA182 multisensor laboratory on an STM32F103C8T6 Blue Pill in Wokwi. It combines periodic sampling, user input, alarm handling, and an inactivity state machine. The current application has six tasks and keeps hardware-independent decisions separate from HAL and RTOS code.
 
 ## Features
 
-- Six independently scheduled FreeRTOS tasks with explicit priorities.
-- DHT22 temperature/humidity sampling and 0-100% relative-light measurement.
-- OLED pages for temperature, humidity, light, and motion.
-- PIR-driven ACTIVE/INACTIVE behavior with a 15-second inactivity timeout.
-- Temperature alarm outside 18.0-30.0 C, using 1 kHz PWM on the buzzer.
-- Queue, queue-set, event-group, and mutex communication.
-- Native unit tests for alarm thresholds, display navigation, encoder input,
-	and activity-state transitions.
+- DHT22 temperature and humidity samples every 2 seconds.
+- LDR ambient-light reading reported as relative percent, not lux.
+- Four OLED pages: temperature, humidity, light, and motion.
+- KY-040 rotary encoder navigation.
+- PIR motion tracking with ACTIVE and INACTIVE modes.
+- Temperature alarm outside 18.0-30.0 C, with a 1 kHz PWM buzzer.
+- Queue-based task communication, event-group state, and mutex-protected serial lines.
+- Native Unity tests for alarm limits, display navigation, encoder decoding, and state transitions.
 
-## Hardware and Pins
+## Learning Objectives
 
-| Blue Pill pin | Device signal |
-|---|---|
-| PA0 | DHT22 data |
-| PA1 | LDR analog output, ADC1 channel 1 |
-| PA2 | PIR output |
-| PA3 / PA4 / PA5 | Encoder CLK / DT / SW |
-| PB6 / PB7 | OLED I2C1 SCL / SDA, address 0x3C |
-| PA8 | Buzzer PWM, TIM1_CH1 |
-| PC13 | Heartbeat LED |
-| PA9 | USART1 TX to Wokwi Serial Monitor |
+The implementation demonstrates periodic FreeRTOS scheduling, task priorities, queues and queue sets, event groups, mutex ownership, an application state machine, STM32 peripheral access through HAL, and native testing of hardware-independent logic.
 
-## FreeRTOS Architecture
+## System Architecture
 
-| Task | Priority | Work / blocking behavior |
-|---|---:|---|
-| MotionTask | 3 | Samples PIR every 100 ms with `vTaskDelayUntil()` |
-| InputTask | 3 | Samples encoder every 5 ms with `vTaskDelayUntil()` |
-| SensorTask | 2 | Reads sensors every 2 s; delays with `vTaskDelayUntil()` |
-| AlarmTask | 2 | Waits for samples, rechecks activity at most every 500 ms |
-| StateTask | 2 | Evaluates activity every 100 ms with `vTaskDelayUntil()` |
-| DisplayTask | 1 | Blocks on a queue set, polling event bits at 250 ms |
-
-`SensorTask` overwrites one-item queues for the display and alarm consumers.
-`InputTask` overwrites the latest display mode. `DisplayTask` owns OLED writes
-and selects between sample and mode queues. `xSystemEvents` carries ACTIVE,
-MOTION, and ALARM bits. `serialMutex` protects each complete UART log line.
-Details and state ownership are in [docs/design-notes.md](docs/design-notes.md).
+SensorTask publishes the newest valid sample to separate display and alarm queues. InputTask publishes the latest selected page. DisplayTask owns the OLED. MotionTask owns the current PIR event bit, StateTask owns the activity bit, and AlarmTask owns the alarm bit.
 
 ```mermaid
 flowchart TD
-	SensorTask --> DisplayQueue[xDisplayQueue] --> DisplayTask
-	SensorTask --> AlarmQueue[xAlarmQueue] --> AlarmTask
-	InputTask --> ModeQueue[xModeQueue] --> DisplayTask
-	MotionTask --> Events[xSystemEvents]
-	StateTask <--> Events
-	AlarmTask --> Buzzer[TIM1_CH1]
-	DisplayTask --> OLED[SSD1306 over I2C1]
+    SensorTask --> DisplayQueue[xDisplayQueue] --> DisplayTask
+    SensorTask --> AlarmQueue[xAlarmQueue] --> AlarmTask
+    InputTask --> ModeQueue[xModeQueue] --> DisplayTask
+    MotionTask --> Events[xSystemEvents]
+    StateTask <--> Events
+    AlarmTask --> Events
+    DisplayTask --> OLED[SSD1306 over I2C1]
+    AlarmTask --> Buzzer[TIM1_CH1]
+    AnyTask[Any task] --> Log[serialMutex then USART1]
 ```
 
-Source diagrams: [system architecture](docs/diagrams/architecture.mmd),
-[task communication](docs/diagrams/task-communication.mmd), and
-[state machine](docs/diagrams/state-machine.mmd).
+Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Captured circuit and finished-system screenshots have not yet been added.
+
+## FreeRTOS Architecture
+
+The project uses a preemptive scheduler with explicit priorities. Periodic tasks block with `vTaskDelayUntil()`; queue consumers block while waiting for data or events.
+
+## Hardware / Simulated Components
+
+| Component | Role |
+|---|---|
+| STM32F103C8T6 Blue Pill | MCU; reset HSI clock at 8 MHz |
+| DHT22 | Temperature and humidity |
+| Photoresistor module | Relative ambient light through ADC1 |
+| PIR sensor | Motion input |
+| KY-040 encoder | Display-page selection |
+| SSD1306 128x64 OLED | Selected measurement display |
+| Buzzer | Temperature alarm output |
+| PC13 LED | Periodic heartbeat |
+
+## Pin Configuration
+
+| Pin | Connection |
+|---|---|
+| PA0 | DHT22 data, with 4.7 kOhm pull-up |
+| PA1 | LDR analog output, ADC1 channel 1 |
+| PA2 | PIR output |
+| PA3 / PA4 / PA5 | Encoder CLK / DT / SW |
+| PA8 | Buzzer PWM, TIM1_CH1 |
+| PA9 / PA10 | USART1 TX / RX to Wokwi serial monitor |
+| PB6 / PB7 | OLED I2C1 SCL / SDA, address 0x3C |
+| PC13 | Heartbeat LED |
+
+The circuit connections are maintained in [diagram.json](diagram.json).
+
+## Task Design
+
+| Task | Priority | Trigger / period | Responsibility | Typical blocking point |
+|---|---:|---|---|---|
+| MotionTask | 3 | 100 ms | Sample PIR and publish `EVENT_MOTION` | `vTaskDelayUntil()` |
+| InputTask | 3 | 5 ms | Decode encoder and publish the selected display page | `vTaskDelayUntil()` |
+| SensorTask | 2 | 2 s | Read DHT22/LDR and publish valid samples | `vTaskDelayUntil()` |
+| AlarmTask | 2 | Sample arrival, 500 ms recheck | Evaluate temperature and drive PWM buzzer | `xQueueReceive()` timeout |
+| StateTask | 2 | 100 ms | Apply the inactivity timeout and update activity state | `vTaskDelayUntil()` |
+| DisplayTask | 1 | Queue event, 250 ms poll | Render the current page and own OLED writes | `xQueueSelectFromSet()` |
+
+The priority levels favor input and motion response over periodic measurement and display refresh. Full task and object rationale is in [docs/design-notes.md](docs/design-notes.md).
+
+## Inter-Task Communication
+
+- `xDisplayQueue` and `xAlarmQueue` are length-one queues. SensorTask overwrites each so both consumers independently receive the newest sample.
+- `xModeQueue` carries the newest `DisplayMode` from InputTask to DisplayTask.
+- `xDisplayEvents` is a queue set allowing DisplayTask to block on either display input queue.
+- `xSystemEvents` holds `EVENT_ACTIVE`, `EVENT_MOTION`, and `EVENT_ALARM` status bits.
+- `serialMutex` protects an entire USART1 line so task messages cannot interleave.
 
 ## State Machine
 
-The system starts ACTIVE. Motion refreshes the inactivity timer; 15 seconds
-without motion changes the state to INACTIVE. INACTIVE blanks the OLED, stops
-sampling/alarming, and ignores encoder navigation while continuing to monitor
-the PIR. Motion returns the system to ACTIVE.
+The system starts ACTIVE. Motion refreshes the inactivity timer. After 15 seconds without motion, the state becomes INACTIVE: sensor reads pause, the buzzer is silenced, the OLED is blanked, and encoder changes are ignored. MotionTask continues polling the PIR; detected motion returns the system to ACTIVE.
 
 ```mermaid
 stateDiagram-v2
-	[*] --> ACTIVE
-	ACTIVE --> INACTIVE: no motion for 15 s
-	INACTIVE --> ACTIVE: motion detected
+    [*] --> ACTIVE
+    ACTIVE --> INACTIVE: no motion for 15 s
+    INACTIVE --> ACTIVE: PIR motion detected
 ```
-
-## Build and Test
-
-```powershell
-pio run -e bluepill_f103c8
-pio test -e native
-pio check -e bluepill_f103c8
-```
-
-Latest local checks: firmware build passed; 17 native tests passed; cppcheck
-passed with 0 high, 0 medium, and 18 low style findings. The low findings and
-the cross-file `unusedFunction` suppression are documented in
-[docs/static-analysis.md](docs/static-analysis.md).
-
-## Wokwi Verification
-
-Open the project in VS Code and start `Wokwi: Start Simulator`. The circuit
-definition is [diagram.json](diagram.json), and firmware paths are in
-[wokwi.toml](wokwi.toml). Current-project interaction tests are listed in
-[docs/test-plan.md](docs/test-plan.md). A 2026-09-29 run confirmed 8 MHz
-core/APB clocks, successful OLED I2C init/address probe, OLED rendering of
-the HUMIDITY page, task startup, and an INACTIVE state transition. Sensor
-value changes, full encoder wraparound, alarm/buzzer behavior, PIR
-reactivation, and the visual INACTIVE behavior still need verification.
-
-The current circuit and finished-system screenshots still need to be captured
-for the portfolio README/report. The supplied reference screenshots belong to
-the other project and are not represented as evidence for this build.
 
 ## Repository Structure
 
 ```text
-include/    Public module interfaces, RTOS config, and port macros
-src/        HAL drivers, FreeRTOS tasks, and pure decision logic
-test/       Native Unity tests
-docs/       Design notes, verification plan, and architecture diagrams
+include/       Module APIs, RTOS configuration, and port macros
+src/           HAL drivers, six tasks, and hardware-independent logic
+lib/           PlatformIO library metadata
+test/         Native Unity test suites
+docs/          Design notes, verification, static analysis, and diagrams
+platformio.ini PlatformIO build, native-test, and analysis environments
+diagram.json   Wokwi circuit
+wokwi.toml     Wokwi firmware and ELF paths
 ```
 
-## Limitations and Remaining Submission Work
+## Getting Started
 
-- DHT22 reads can fail timing/checksum validation; failed samples are logged
-	and skipped rather than publishing fabricated readings.
-- Wokwi functional checks still need to be recorded for this project build.
-- The assignment's separate laboratory report PDF, portfolio screenshots, and
-	Hackster.io publication are not included or claimed as complete.
+Install PlatformIO Core or the VS Code PlatformIO extension, plus the Wokwi for VS Code extension. Clone this repository, open its directory in VS Code, and allow PlatformIO to install the STM32 platform, framework, compiler, and libraries.
+
+## Building the Project
+
+```powershell
+pio run -e bluepill_f103c8
+```
+
+The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs are not used.
+
+## Running the Wokwi Simulation
+
+Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
+
+## Unit Testing
+
+Run the hardware-independent decision tests with:
+
+```powershell
+pio test -e native
+```
+
+There are 17 tests across four suites: five alarm-boundary cases, four display-navigation cases, four encoder cases, and four state-transition cases. The latest recorded run passed all 17 tests.
+
+## Static Code Analysis
+
+Run:
+
+```powershell
+pio check -e bluepill_f103c8
+```
+
+The latest recorded cppcheck run passed with zero high- and medium-severity findings and 18 low-style cast findings. Per-file `unusedFunction` reports are suppressed because the PlatformIO check cannot see cross-translation-unit callers. Details are in [docs/static-analysis.md](docs/static-analysis.md).
+
+## Functional Verification
+
+On 2026-09-29, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, sample output, and the OLED displaying the HUMIDITY page at 40.0%. The log also showed encoder selections for HUMIDITY and LIGHT and an INACTIVE transition after 15 seconds without motion.
+
+That run did not verify every expected effect. Sensor control changes, full encoder wraparound, alarm/buzzer behavior, PIR reactivation, and visual OLED blank/resume behavior are still partial or pending. The evidence table is maintained in [docs/test-plan.md](docs/test-plan.md); do not treat reference-project results as results from this firmware.
+
+## Engineering Decisions
+
+- The system retains the STM32 reset HSI clock at 8 MHz; APB1 therefore meets the STM32F1 I2C peripheral's minimum clock requirement.
+- HAL uses TIM4 for its 1 ms tick; FreeRTOS owns SysTick through the project Cortex-M3 port.
+- The OLED is only written by DisplayTask, and the UART logger holds its mutex for one complete line.
+- SensorTask skips a failed DHT22 sample instead of publishing invalid values.
+- The pure logic modules have no HAL or FreeRTOS dependencies, allowing host-side tests.
+
+## Limitations
+
+- A DHT22 checksum or timing failure skips that sample; the next periodic read retries.
+- Wokwi functional coverage is incomplete, despite successful build and native tests.
+- Circuit/finished-system screenshots and the separate laboratory report PDF have not been added.
+
+## Future Improvements
+
+Complete the remaining Wokwi tests and required FreeRTOS fault experiments, record their observed results, capture project-specific screenshots, generate the laboratory report, and prepare the portfolio publication.
+
+## References and Acknowledgments
+
+- [FreeRTOS Kernel documentation](https://www.freertos.org/Documentation/RTOS_book.html)
+- [STM32F1 HAL and CMSIS documentation](https://www.st.com/en/embedded-software/stm32cubef1.html)
+- [Wokwi STM32 Blue Pill reference](https://docs.wokwi.com/parts/board-stm32-bluepill)
+- [Unity test framework](https://github.com/ThrowTheSwitch/Unity)
+- The task decomposition and Wokwi test workflow were informed by [a peer's BCA182 implementation](https://github.com/pauul14/bca182-freertos-multisensor), which the author permitted us to consult. This README's wording and the verification statements above are specific to this repository.
