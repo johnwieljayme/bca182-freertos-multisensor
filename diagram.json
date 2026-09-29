@@ -6,22 +6,22 @@
     {
       "type": "board-stm32-bluepill",
       "id": "stm32",
-      "top": 170,
-      "left": 390,
+      "top": 110,
+      "left": 300,
       "attrs": {}
     },
     {
       "type": "wokwi-dht22",
       "id": "dht1",
-      "top": 20,
-      "left": 660,
+      "top": 30,
+      "left": 500,
       "attrs": {}
     },
     {
       "type": "wokwi-resistor",
       "id": "r1",
       "top": 20,
-      "left": 740,
+      "left": 585,
       "attrs": {
         "value": "4700"
       }
@@ -29,15 +29,15 @@
     {
       "type": "wokwi-photoresistor-sensor",
       "id": "ldr1",
-      "top": 210,
-      "left": 660,
+      "top": 175,
+      "left": 510,
       "attrs": {}
     },
     {
       "type": "board-ssd1306",
       "id": "oled1",
-      "top": 80,
-      "left": 100,
+      "top": 35,
+      "left": 65,
       "attrs": {
         "i2cAddress": "0x3c"
       }
@@ -45,22 +45,22 @@
     {
       "type": "wokwi-pir-motion-sensor",
       "id": "pir1",
-      "top": 390,
-      "left": 660,
+      "top": 325,
+      "left": 510,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "encoder1",
-      "top": 250,
-      "left": 100,
+      "top": 200,
+      "left": 65,
       "attrs": {}
     },
     {
       "type": "wokwi-buzzer",
       "id": "buzzer1",
-      "top": 500,
-      "left": 100,
+      "top": 385,
+      "left": 85,
       "attrs": {}
     }
   ],

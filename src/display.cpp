@@ -158,30 +158,33 @@ static void Draw_Tenths(char *out, size_t size, float value, const char *unit) {
 }
 
 static bool Draw_Screen(DisplayMode mode, const SensorData *sample,
-                        bool motion, const char *alarmText) {
+                        bool motion, bool active, const char *alarmText) {
     memset(SSD1306_Buffer, 0, sizeof(SSD1306_Buffer));
     DrawString(28, 0, "ROOM MONITOR");
-    if (alarmText != NULL) {
-        DrawString(34, 10, alarmText);
-    }
-    DrawString(28, 24, displayModeLabel(mode));
 
     char value[24];
-    switch (mode) {
-        case DisplayMode::TEMPERATURE:
-            Draw_Tenths(value, sizeof(value), sample->temperature, "C");
-            break;
-        case DisplayMode::HUMIDITY:
-            Draw_Tenths(value, sizeof(value), sample->humidity, "%");
-            break;
-        case DisplayMode::LIGHT:
-            snprintf(value, sizeof(value), "%d %%", sample->lightLevel);
-            break;
-        case DisplayMode::MOTION:
-            snprintf(value, sizeof(value), "%s", motion ? "DETECTED" : "CLEAR");
-            break;
-    }
-    DrawString(36, 44, value);
+    char line[32];
+
+    Draw_Tenths(value, sizeof(value), sample->temperature, "C");
+    snprintf(line, sizeof(line), "%cTEMP %s",
+             mode == DisplayMode::TEMPERATURE ? '>' : ' ', value);
+    DrawString(8, 8, line);
+
+    Draw_Tenths(value, sizeof(value), sample->humidity, "%");
+    snprintf(line, sizeof(line), "%cHUM %s",
+             mode == DisplayMode::HUMIDITY ? '>' : ' ', value);
+    DrawString(8, 16, line);
+
+    snprintf(line, sizeof(line), "%cLIGHT %d %%",
+             mode == DisplayMode::LIGHT ? '>' : ' ', sample->lightLevel);
+    DrawString(8, 24, line);
+
+    snprintf(line, sizeof(line), "%cMOTION %s",
+             mode == DisplayMode::MOTION ? '>' : ' ', motion ? "DETECTED" : "CLEAR");
+    DrawString(8, 32, line);
+
+    DrawString(8, 40, active ? "STATE ACTIVE" : "STATE INACTIVE");
+    DrawString(8, 48, alarmText != NULL ? alarmText : "ALARM NORMAL");
     return Display_Update();
 }
 
@@ -249,7 +252,7 @@ void DisplayTask(void *pvParameters) {
                 alarmText = evaluateTemperature(sample.temperature) == AlarmState::LOW_TEMPERATURE
                                 ? "ALARM LOW" : "ALARM HIGH";
             }
-            if (!Draw_Screen(mode, &sample, motion, alarmText) && !writeErrorLogged) {
+            if (!Draw_Screen(mode, &sample, motion, active, alarmText) && !writeErrorLogged) {
                 char diagnostic[96];
                 snprintf(diagnostic, sizeof(diagnostic),
                          "DISPLAY: OLED write failed status=%d err=0x%08lX",

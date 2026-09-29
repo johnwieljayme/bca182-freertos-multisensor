@@ -1,6 +1,6 @@
 # BCA182 FreeRTOS Room Monitor
 
-A simulated STM32 Blue Pill monitors temperature, humidity, relative light, and motion. FreeRTOS tasks move sensor data to an OLED and temperature alarm, while a rotary encoder selects the measurement shown. The firmware uses PlatformIO, STM32Cube HAL, and native FreeRTOS APIs.
+A simulated STM32 Blue Pill monitors temperature, humidity, relative light, and motion. FreeRTOS tasks move sensor data to an OLED and temperature alarm, while a rotary encoder highlights a reading on the display. The firmware uses PlatformIO, STM32Cube HAL, and native FreeRTOS APIs.
 
 ## Project Overview
 
@@ -10,7 +10,7 @@ This project implements the BCA182 multisensor laboratory on an STM32F103C8T6 Bl
 
 - DHT22 temperature and humidity samples every 2 seconds.
 - LDR ambient-light reading reported as relative percent, not lux.
-- Four OLED pages: temperature, humidity, light, and motion.
+- OLED dashboard showing temperature, humidity, light, and motion together; the encoder highlights the selected row.
 - KY-040 rotary encoder navigation.
 - PIR motion tracking with ACTIVE and INACTIVE modes.
 - Temperature alarm outside 18.0-30.0 C, with a 1 kHz PWM buzzer.
@@ -53,7 +53,7 @@ The project uses a preemptive scheduler with explicit priorities. Periodic tasks
 | Photoresistor module | Relative ambient light through ADC1 |
 | PIR sensor | Motion input |
 | KY-040 encoder | Display-page selection |
-| SSD1306 128x64 OLED | Selected measurement display |
+| SSD1306 128x64 OLED | Multi-reading dashboard |
 | Buzzer | Temperature alarm output |
 | PC13 LED | Periodic heartbeat |
 
@@ -155,13 +155,14 @@ The latest recorded cppcheck run passed with zero high- and medium-severity find
 
 ## Functional Verification
 
-On 2026-09-29, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, sample output, and the OLED displaying the HUMIDITY page at 40.0%. The log also showed encoder selections for HUMIDITY and LIGHT and an INACTIVE transition after 15 seconds without motion.
+On 2026-09-29, before the dashboard revision, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, sample output, and the OLED displaying the HUMIDITY page at 40.0%. The log also showed encoder selections for HUMIDITY and LIGHT and an INACTIVE transition after 15 seconds without motion. The current dashboard has only been build-verified; its visual layout still needs a Wokwi run.
 
-That run did not verify every expected effect. Sensor control changes, full encoder wraparound, alarm/buzzer behavior, PIR reactivation, and visual OLED blank/resume behavior are still partial or pending. The evidence table is maintained in [docs/test-plan.md](docs/test-plan.md); do not treat reference-project results as results from this firmware.
+That run did not verify every expected effect. Sensor control changes, full encoder wraparound, alarm/buzzer behavior, PIR reactivation, dashboard rendering, and visual OLED blank/resume behavior are still partial or pending. The evidence table is maintained in [docs/test-plan.md](docs/test-plan.md); do not treat reference-project results as results from this firmware.
 
 ## Engineering Decisions
 
 - The system retains the STM32 reset HSI clock at 8 MHz; APB1 therefore meets the STM32F1 I2C peripheral's minimum clock requirement.
+- The OLED shows all four readings at once and uses the encoder marker to indicate the selected item. This is a deliberate deviation from FR-05's single-measurement-at-a-time requirement; confirm that dashboard behavior is acceptable for grading.
 - HAL uses TIM4 for its 1 ms tick; FreeRTOS owns SysTick through the project Cortex-M3 port.
 - The OLED is only written by DisplayTask, and the UART logger holds its mutex for one complete line.
 - SensorTask skips a failed DHT22 sample instead of publishing invalid values.

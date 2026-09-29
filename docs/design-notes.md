@@ -55,6 +55,15 @@ system becomes INACTIVE. SensorTask skips sensor reads while INACTIVE, the
 buzzer is silenced, DisplayTask blanks the OLED, and InputTask ignores mode
 changes. MotionTask remains scheduled and a new motion event restores ACTIVE.
 
+## OLED Requirement Deviation
+
+The OLED currently renders temperature, humidity, light, and motion together;
+the rotary encoder marks the selected row instead of hiding the other readings.
+This is an intentional dashboard behavior requested during development, but it
+deviates from laboratory requirement FR-05, which specifies one selected
+measurement at a time. Confirm with the instructor whether this variation is
+acceptable before final submission.
+
 ## Decisions and Limitations
 
 - Hardware-independent rules are isolated in `*_logic.cpp` and tested with

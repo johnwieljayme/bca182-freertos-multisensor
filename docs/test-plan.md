@@ -20,12 +20,12 @@ behavior observed in that run; unobserved portions remain partial or pending.
 | ID | Stimulus | Expected observation | Result / date |
 |---|---|---|---|
 | B-01 | Start simulation | Startup banner, all six task-start lines, OLED init, first sample | PASS, 2026-09-29: all six tasks started; clocks reported 8 MHz; I2C init/probe returned 0; OLED initialized and samples began. |
-| OLED-01 | Select HUMIDITY | OLED shows one selected measurement and its value | PASS, 2026-09-29: screenshot showed ROOM MONITOR / HUMIDITY / 40.0%; terminal logged `INPUT: mode HUMIDITY`. |
+| OLED-01 | Start with a valid sample | Dashboard shows temperature, humidity, light, and motion together; encoder marks the selected row | PENDING: previous screenshot predates the dashboard change. |
 | FT-01 | Change DHT22 temperature | Next valid sample and temperature page update | PENDING |
-| FT-02 | Change DHT22 humidity; select HUMIDITY | Humidity value updates on OLED and log | PARTIAL, 2026-09-29: OLED showed 40.0% and samples logged 40.00%; the sensor value was not changed during the run. |
+| FT-02 | Change DHT22 humidity | Dashboard humidity value updates with the next sample | PARTIAL, 2026-09-29: the pre-dashboard OLED showed 40.0% and samples logged 40.00%; sensor value was not changed and the dashboard is not yet visually verified. |
 | FT-03 | Change LDR brightness; select LIGHT | Relative light changes from 0-100% | PENDING |
-| FT-04 | Rotate encoder clockwise | Page advances TEMP -> HUMIDITY -> LIGHT -> MOTION -> TEMP | PARTIAL, 2026-09-29: terminal logged HUMIDITY and LIGHT selections; full cycle and wraparound were not observed. |
-| FT-05 | Rotate encoder counterclockwise | Page moves in reverse and wraps | PENDING |
+| FT-04 | Rotate encoder clockwise | Selection marker advances TEMP -> HUMIDITY -> LIGHT -> MOTION -> TEMP while all values remain visible | PARTIAL, 2026-09-29: terminal logged HUMIDITY and LIGHT selections; dashboard marker, full cycle, and wraparound were not observed. |
+| FT-05 | Rotate encoder counterclockwise | Selection marker moves in reverse and wraps while all values remain visible | PENDING |
 | FT-06 | Set temperature above 30 C | HIGH alarm line and buzzer activate | PENDING |
 | FT-07 | Return temperature to 18-30 C | Alarm and buzzer stop | PENDING |
 | FT-08 | Trigger PIR while ACTIVE | Motion is logged; system remains ACTIVE | PENDING |
