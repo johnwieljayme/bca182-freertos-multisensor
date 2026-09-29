@@ -19,9 +19,9 @@ behavior observed in that run; unobserved portions remain partial or pending.
 
 | ID | Stimulus | Expected observation | Result / date |
 |---|---|---|---|
-| B-01 | Start simulation | Startup banner, all six task-start lines, OLED init, first sample | PASS, 2026-09-29: all six tasks started; clocks reported 8 MHz; I2C init/probe returned 0; OLED initialized and samples began. |
+| B-01 | Start simulation | Startup banner, all six task-start lines, OLED init, dashboard appears after first valid read | PASS, 2026-09-29: all six tasks started; clocks reported 8 MHz; I2C init/probe returned 0; user confirmed the OLED dashboard works. Periodic sample text is no longer printed. |
 | OLED-01 | Start with a valid sample | Dashboard shows temperature, humidity, light, and motion together; encoder marks the selected row | PENDING: previous screenshot predates the dashboard change. |
-| FT-01 | Change DHT22 temperature | Next valid sample and temperature page update | PENDING |
+| FT-01 | Change DHT22 temperature | Dashboard temperature value updates after the next valid read | PENDING |
 | FT-02 | Change DHT22 humidity | Dashboard humidity value updates with the next sample | PARTIAL, 2026-09-29: the pre-dashboard OLED showed 40.0% and samples logged 40.00%; sensor value was not changed and the dashboard is not yet visually verified. |
 | FT-03 | Change LDR brightness; select LIGHT | Relative light changes from 0-100% | PENDING |
 | FT-04 | Rotate encoder clockwise | Selection marker advances TEMP -> HUMIDITY -> LIGHT -> MOTION -> TEMP while all values remain visible | PARTIAL, 2026-09-29: terminal logged HUMIDITY and LIGHT selections; dashboard marker, full cycle, and wraparound were not observed. |

@@ -155,7 +155,7 @@ The latest recorded cppcheck run passed with zero high- and medium-severity find
 
 ## Functional Verification
 
-On 2026-09-29, before the dashboard revision, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, sample output, and the OLED displaying the HUMIDITY page at 40.0%. The log also showed encoder selections for HUMIDITY and LIGHT and an INACTIVE transition after 15 seconds without motion. The current dashboard has only been build-verified; its visual layout still needs a Wokwi run.
+On 2026-09-29, Wokwi showed all six tasks starting, 8 MHz core/APB clocks, successful OLED I2C initialization/address probe, and an INACTIVE transition after 15 seconds without motion. The user later confirmed the OLED dashboard was working. Sensor values continue to update the display and alarm queues every 2 seconds, but the repeated `Sample:` UART line has been removed to keep the terminal focused on state, input, and error messages.
 
 That run did not verify every expected effect. Sensor control changes, full encoder wraparound, alarm/buzzer behavior, PIR reactivation, dashboard rendering, and visual OLED blank/resume behavior are still partial or pending. The evidence table is maintained in [docs/test-plan.md](docs/test-plan.md); do not treat reference-project results as results from this firmware.
 
