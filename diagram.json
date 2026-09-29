@@ -29,7 +29,7 @@
     {
       "type": "wokwi-photoresistor-sensor",
       "id": "ldr1",
-      "top": 165,
+      "top": 150,
       "left": 330,
       "attrs": {}
     },
@@ -45,22 +45,22 @@
     {
       "type": "wokwi-pir-motion-sensor",
       "id": "pir1",
-      "top": 315,
+      "top": 250,
       "left": 330,
       "attrs": {}
     },
     {
       "type": "wokwi-ky-040",
       "id": "encoder1",
-      "top": 165,
-      "left": 15,
+      "top": 340,
+      "left": 330,
       "attrs": {}
     },
     {
       "type": "wokwi-buzzer",
       "id": "buzzer1",
-      "top": 315,
-      "left": 15,
+      "top": 460,
+      "left": 330,
       "attrs": {}
     }
   ],
