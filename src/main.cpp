@@ -63,7 +63,7 @@ void app_main(void)
         xTaskCreate(DisplayTask, "DisplayTask", 256, NULL, 1, NULL) == pdPASS &&
         xTaskCreate(InputTask, "InputTask", 128, NULL, 3, NULL) == pdPASS &&
         xTaskCreate(MotionTask, "MotionTask", 128, NULL, 3, NULL) == pdPASS &&
-        xTaskCreate(AlarmTask, "AlarmTask", 128, NULL, 2, NULL) == pdPASS &&
+        xTaskCreate(AlarmTask, "AlarmTask", 256, NULL, 2, NULL) == pdPASS &&
         xTaskCreate(StateTask, "StateTask", 128, NULL, 2, NULL) == pdPASS;
 
     if (!created)
