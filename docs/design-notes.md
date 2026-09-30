@@ -55,14 +55,23 @@ system becomes INACTIVE. SensorTask skips sensor reads while INACTIVE, the
 buzzer is silenced, DisplayTask blanks the OLED, and InputTask ignores mode
 changes. MotionTask remains scheduled and a new motion event restores ACTIVE.
 
-## OLED Requirement Deviation
+## OLED Display Design
 
-The OLED currently renders temperature, humidity, light, and motion together;
-the rotary encoder marks the selected row instead of hiding the other readings.
-This is an intentional dashboard behavior requested during development, but it
-deviates from laboratory requirement FR-05, which specifies one selected
-measurement at a time. Confirm with the instructor whether this variation is
-acceptable before final submission.
+The SSD1306 OLED is owned by `DisplayTask`, which is responsible for all
+display updates. The rotary encoder selects one measurement at a time from
+the following modes:
+
+- Temperature
+- Humidity
+- Light
+- Motion
+
+The OLED displays only the currently selected measurement together with the
+current system state and alarm status. The encoder supports both clockwise
+and counterclockwise navigation with wraparound.
+
+This implementation follows the laboratory requirement that one selected
+measurement is displayed at a time.
 
 ## Decisions and Limitations
 
