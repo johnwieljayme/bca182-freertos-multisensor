@@ -144,9 +144,9 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
-**Figure 1. Wokwi circuit**
+![Wokwi circuit: STM32F103C8 Blue Pill with the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer running in Wokwi](docs/screenshots/wokwi-circuit.PNG)
 
-![Wokwi circuit](docs/screenshots/wokwi-circuit.PNG)
+*The running Wokwi simulation showing the complete multisensor circuit and live simulation controls.*
 
 Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
 
@@ -172,9 +172,9 @@ The latest recorded cppcheck run passed with zero high- and medium-severity find
 
 ## Functional Verification
 
-**Figure 5. Finished system**
+![Finished system: completed BCA182 FreeRTOS multisensor system running in Wokwi](docs/screenshots/finished-system.PNG)
 
-![Finished system](docs/screenshots/finished-system.PNG)
+*The completed multisensor system running the Wokwi simulation during functional verification.*
 
 Wokwi functional verification FT-01 through FT-10 was completed on 2026-09-29. The tests covered temperature, humidity, light, clockwise and counterclockwise encoder navigation with wraparound, HIGH and LOW temperature alarms, PIR activation, the 15-second inactivity timeout, and PIR reactivation while INACTIVE.
 
