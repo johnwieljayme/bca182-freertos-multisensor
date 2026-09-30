@@ -38,7 +38,30 @@ flowchart TD
     AnyTask[Any task] --> Log[serialMutex then USART1]
 ```
 
-Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). The required project-specific circuit image, system architecture diagram, FreeRTOS task-communication diagram, state-machine diagram, and finished-system screenshot still need to be added.
+Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Project visuals are included below and the editable Mermaid sources are maintained in [docs/diagrams](docs/diagrams).
+
+### Project Visuals
+
+**Figure 1. Wokwi circuit**
+
+![Wokwi circuit](docs/screenshots/wokwi-circuit.PNG)
+
+**Figure 2. System architecture**
+
+![System architecture](docs/diagrams/architecture.png)
+
+**Figure 3. FreeRTOS task communication**
+
+![FreeRTOS task communication](docs/diagrams/task-communication.png)
+
+**Figure 4. ACTIVE / INACTIVE state machine**
+
+![ACTIVE / INACTIVE state machine](docs/diagrams/state-machine.png)
+
+**Figure 5. Finished system**
+
+![Finished system](docs/screenshots/finished-system.PNG)
+
 
 ## FreeRTOS Architecture
 
@@ -53,7 +76,7 @@ The project uses a preemptive scheduler with explicit priorities. Periodic tasks
 | Photoresistor module | Relative ambient light through ADC1 |
 | PIR sensor | Motion input |
 | KY-040 encoder | Display-page selection |
-| SSD1306 128x64 OLED | Multi-reading dashboard |
+| SSD1306 128x64 OLED | Selected-measurement display |
 | Buzzer | Temperature alarm output |
 | PC13 LED | Periodic heartbeat |
 
@@ -183,12 +206,11 @@ The verification record is maintained in [docs/test-plan.md](docs/test-plan.md).
 ## Limitations
 
 - A DHT22 checksum or timing failure skips that sample; the next periodic read retries.
-- The required README circuit image, system architecture visual, FreeRTOS task-communication visual, state-machine visual, and finished-system screenshot still need to be captured or added.
 - The separate laboratory report PDF and portfolio publication have not yet been added.
 
 ## Future Improvements
 
-Capture and add the required project-specific README visuals, keep the verification record synchronized with observed runs, generate the separate laboratory report, and prepare the portfolio publication.
+Keep the verification record synchronized with observed runs, generate the separate laboratory report, and prepare the portfolio publication.
 
 ## References and Acknowledgments
 
