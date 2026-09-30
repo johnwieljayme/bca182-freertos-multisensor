@@ -23,6 +23,10 @@ The implementation demonstrates periodic FreeRTOS scheduling, task priorities, q
 
 ## System Architecture
 
+**Figure 2. System architecture**
+
+![System architecture](docs/diagrams/architecture.png)
+
 SensorTask publishes the newest valid sample to separate display and alarm queues. InputTask publishes the latest selected page. DisplayTask owns the OLED. MotionTask owns the current PIR event bit, StateTask owns the activity bit, and AlarmTask owns the alarm bit.
 
 ```mermaid
@@ -39,28 +43,6 @@ flowchart TD
 ```
 
 Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Project visuals are included below and the editable Mermaid sources are maintained in [docs/diagrams](docs/diagrams).
-
-### Project Visuals
-
-**Figure 1. Wokwi circuit**
-
-![Wokwi circuit](docs/screenshots/wokwi-circuit.PNG)
-
-**Figure 2. System architecture**
-
-![System architecture](docs/diagrams/architecture.png)
-
-**Figure 3. FreeRTOS task communication**
-
-![FreeRTOS task communication](docs/diagrams/task-communication.png)
-
-**Figure 4. ACTIVE / INACTIVE state machine**
-
-![ACTIVE / INACTIVE state machine](docs/diagrams/state-machine.png)
-
-**Figure 5. Finished system**
-
-![Finished system](docs/screenshots/finished-system.PNG)
 
 
 ## FreeRTOS Architecture
@@ -110,6 +92,10 @@ The priority levels favor input and motion response over periodic measurement an
 
 ## Inter-Task Communication
 
+**Figure 3. FreeRTOS task communication**
+
+![FreeRTOS task communication](docs/diagrams/task-communication.png)
+
 - `xDisplayQueue` and `xAlarmQueue` are length-one queues. SensorTask overwrites each so both consumers independently receive the newest sample.
 - `xModeQueue` carries the newest `DisplayMode` from InputTask to DisplayTask.
 - `xDisplayEvents` is a queue set allowing DisplayTask to block on either display input queue.
@@ -117,6 +103,10 @@ The priority levels favor input and motion response over periodic measurement an
 - `serialMutex` protects an entire USART1 line so task messages cannot interleave.
 
 ## State Machine
+
+**Figure 4. ACTIVE / INACTIVE state machine**
+
+![ACTIVE / INACTIVE state machine](docs/diagrams/state-machine.png)
 
 The system starts ACTIVE. Motion refreshes the inactivity timer. After 15 seconds without motion, the state becomes INACTIVE: sensor reads pause, the buzzer is silenced, the OLED is blanked, and encoder changes are ignored. MotionTask continues polling the PIR; detected motion returns the system to ACTIVE.
 
@@ -154,6 +144,10 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
+**Figure 1. Wokwi circuit**
+
+![Wokwi circuit](docs/screenshots/wokwi-circuit.PNG)
+
 Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
 
 ## Unit Testing
@@ -177,6 +171,10 @@ pio check -e bluepill_f103c8
 The latest recorded cppcheck run passed with zero high- and medium-severity findings and 18 low-style cast findings. Per-file `unusedFunction` reports are suppressed because the PlatformIO check cannot see cross-translation-unit callers. Details are in [docs/static-analysis.md](docs/static-analysis.md).
 
 ## Functional Verification
+
+**Figure 5. Finished system**
+
+![Finished system](docs/screenshots/finished-system.PNG)
 
 Wokwi functional verification FT-01 through FT-10 was completed on 2026-09-29. The tests covered temperature, humidity, light, clockwise and counterclockwise encoder navigation with wraparound, HIGH and LOW temperature alarms, PIR activation, the 15-second inactivity timeout, and PIR reactivation while INACTIVE.
 
