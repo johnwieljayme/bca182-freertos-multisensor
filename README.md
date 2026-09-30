@@ -122,9 +122,9 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
-![Wokwi circuit: STM32F103C8 Blue Pill with the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer running in Wokwi](docs/screenshots/wokwi-circuit.PNG)
+![Wokwi circuit: STM32F103C8 Blue Pill with the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](docs/screenshots/wokwi-circuit.PNG)
 
-*The running Wokwi simulation showing the complete multisensor circuit, OLED output and serial terminal. Source: [`diagram.json`](diagram.json).*
+*The full circuit in Wokwi, as defined in [`diagram.json`](diagram.json). The OLED and serial terminal show the running multisensor system during verification.*
 
 Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
 
