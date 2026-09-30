@@ -27,7 +27,7 @@ The implementation demonstrates periodic FreeRTOS scheduling, task priorities, q
 
 *Hardware and task architecture of the completed multisensor system. Source: [`docs/diagrams/architecture.mmd`](docs/diagrams/architecture.mmd).*
 
-Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Project visuals are included below and the editable Mermaid sources are maintained in [docs/diagrams](docs/diagrams).
+Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). The editable Mermaid sources are maintained in [docs/diagrams](docs/diagrams).
 
 
 ## FreeRTOS Architecture
@@ -122,7 +122,7 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
-![Wokwi circuit: STM32F103C8 Blue Pill wired to the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/docs/screenshots/wokwi-circuit.PNG)
+![Wokwi circuit: STM32F103C8 Blue Pill wired to the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](docs/screenshots/wokwi-circuit.PNG)
 
 ([image](https://github.com/johnwieljayme/bca182-freertos-multisensor/raw/main/docs/screenshots/wokwi-circuit.PNG))
 
@@ -240,11 +240,14 @@ The verification record is maintained in [docs/test-plan.md](docs/test-plan.md).
 ## Limitations
 
 - A DHT22 checksum or timing failure skips that sample; the next periodic read retries.
-- The separate laboratory report PDF and portfolio publication have not yet been added.
+- The LDR reports a relative 0-100% light level rather than calibrated lux.
+- The current implementation is verified in Wokwi; physical-sensor timing and electrical behavior may differ from the simulation.
 
 ## Future Improvements
 
-Keep the verification record synchronized with observed runs, generate the separate laboratory report, and prepare the portfolio publication.
+- Add calibrated light measurement if lux-level reporting is required.
+- Add additional sensor-fault status handling for persistent DHT22 failures.
+- Validate the firmware on the physical STM32 and sensor hardware.
 
 ## References and Acknowledgments
 
