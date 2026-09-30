@@ -23,24 +23,9 @@ The implementation demonstrates periodic FreeRTOS scheduling, task priorities, q
 
 ## System Architecture
 
-**Figure 2. System architecture**
+![System architecture: STM32F103C8 Blue Pill connected to the DHT22, LDR, PIR sensor, rotary encoder, SSD1306 OLED and buzzer](docs/diagrams/architecture.png)
 
-![System architecture](docs/diagrams/architecture.png)
-
-SensorTask publishes the newest valid sample to separate display and alarm queues. InputTask publishes the latest selected page. DisplayTask owns the OLED. MotionTask owns the current PIR event bit, StateTask owns the activity bit, and AlarmTask owns the alarm bit.
-
-```mermaid
-flowchart TD
-    SensorTask --> DisplayQueue[xDisplayQueue] --> DisplayTask
-    SensorTask --> AlarmQueue[xAlarmQueue] --> AlarmTask
-    InputTask --> ModeQueue[xModeQueue] --> DisplayTask
-    MotionTask --> Events[xSystemEvents]
-    StateTask <--> Events
-    AlarmTask --> Events
-    DisplayTask --> OLED[SSD1306 over I2C1]
-    AlarmTask --> Buzzer[TIM1_CH1]
-    AnyTask[Any task] --> Log[serialMutex then USART1]
-```
+*Hardware and task architecture of the completed multisensor system. Source: [`docs/diagrams/architecture.mmd`](docs/diagrams/architecture.mmd).*
 
 Editable diagram sources: [hardware and task architecture](docs/diagrams/architecture.mmd), [task communication](docs/diagrams/task-communication.mmd), and [activity state machine](docs/diagrams/state-machine.mmd). Project visuals are included below and the editable Mermaid sources are maintained in [docs/diagrams](docs/diagrams).
 
@@ -92,9 +77,9 @@ The priority levels favor input and motion response over periodic measurement an
 
 ## Inter-Task Communication
 
-**Figure 3. FreeRTOS task communication**
+![FreeRTOS task communication: SensorTask sends samples to the display and alarm queues, InputTask sends the selected mode, and the tasks communicate through event bits and the serial mutex](docs/diagrams/task-communication.png)
 
-![FreeRTOS task communication](docs/diagrams/task-communication.png)
+*FreeRTOS task communication and synchronization used by the completed multisensor system. Source: [`docs/diagrams/task-communication.mmd`](docs/diagrams/task-communication.mmd).*
 
 - `xDisplayQueue` and `xAlarmQueue` are length-one queues. SensorTask overwrites each so both consumers independently receive the newest sample.
 - `xModeQueue` carries the newest `DisplayMode` from InputTask to DisplayTask.
@@ -104,18 +89,11 @@ The priority levels favor input and motion response over periodic measurement an
 
 ## State Machine
 
-**Figure 4. ACTIVE / INACTIVE state machine**
+![ACTIVE / INACTIVE state machine: the system starts ACTIVE, becomes INACTIVE after 15 seconds without motion, and returns to ACTIVE when PIR motion is detected](docs/diagrams/state-machine.png)
 
-![ACTIVE / INACTIVE state machine](docs/diagrams/state-machine.png)
+*The system state machine showing the ACTIVE and INACTIVE states and their transition conditions. Source: [`docs/diagrams/state-machine.mmd`](docs/diagrams/state-machine.mmd).*
 
 The system starts ACTIVE. Motion refreshes the inactivity timer. After 15 seconds without motion, the state becomes INACTIVE: sensor reads pause, the buzzer is silenced, the OLED is blanked, and encoder changes are ignored. MotionTask continues polling the PIR; detected motion returns the system to ACTIVE.
-
-```mermaid
-stateDiagram-v2
-    [*] --> ACTIVE
-    ACTIVE --> INACTIVE: no motion for 15 s
-    INACTIVE --> ACTIVE: PIR motion detected
-```
 
 ## Repository Structure
 
@@ -146,7 +124,7 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ![Wokwi circuit: STM32F103C8 Blue Pill with the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer running in Wokwi](docs/screenshots/wokwi-circuit.PNG)
 
-*The running Wokwi simulation showing the complete multisensor circuit and live simulation controls.*
+*The running Wokwi simulation showing the complete multisensor circuit, OLED output and serial terminal. Source: [`diagram.json`](diagram.json).*
 
 Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
 
@@ -174,7 +152,7 @@ The latest recorded cppcheck run passed with zero high- and medium-severity find
 
 ![Finished system: completed BCA182 FreeRTOS multisensor system running in Wokwi](docs/screenshots/finished-system.PNG)
 
-*The completed multisensor system running the Wokwi simulation during functional verification.*
+*The completed multisensor system running in Wokwi during functional verification.*
 
 Wokwi functional verification FT-01 through FT-10 was completed on 2026-09-29. The tests covered temperature, humidity, light, clockwise and counterclockwise encoder navigation with wraparound, HIGH and LOW temperature alarms, PIR activation, the 15-second inactivity timeout, and PIR reactivation while INACTIVE.
 
