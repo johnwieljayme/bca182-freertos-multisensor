@@ -122,11 +122,67 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
-![Wokwi circuit: STM32F103C8 Blue Pill with the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](docs/screenshots/wokwi-circuit.PNG)
+[Wokwi circuit: STM32F103C8 Blue Pill wired to the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/docs/screenshots/wokwi-circuit.PNG) ([image](https://github.com/johnwieljayme/bca182-freertos-multisensor/raw/main/docs/screenshots/wokwi-circuit.PNG))
 
-*The full circuit in Wokwi, as defined in [`diagram.json`](diagram.json). The OLED and serial terminal show the running multisensor system during verification.*
+*The full circuit in Wokwi, as defined in [`diagram.json`](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/diagram.json). The OLED and serial terminal show the running multisensor system during verification.*
 
-Build first, then run **Wokwi: Start Simulator** from the VS Code command palette. The simulation loads firmware using [wokwi.toml](wokwi.toml). DHT22 and light controls are available by clicking their components; use the PIR's motion control and encoder arrows/knob to exercise input behavior.
+### Starting the simulation
+
+1. Build the firmware with `pio run` (see [Building the Project](https://github.com/johnwieljayme/bca182-freertos-multisensor#building-the-project)). Wokwi loads the built `firmware.bin` and `firmware.elf` through `wokwi.toml`, so rebuild after every code change.
+2. In VS Code, press **F1** and run **"Wokwi: Start Simulator"**. The circuit from `diagram.json` opens in a new tab.
+3. Keep the **Wokwi Terminal** (the serial log) and the circuit view both visible. Most of the system's behaviour shows up in the log.
+
+### Expected serial output
+
+On startup the terminal shows:
+
+```
+BCA182 FreeRTOS Multisensor
+System starting...
+CLOCK: core=8000000 HCLK=8000000 PCLK1=8000000 PCLK2=8000000 Hz
+ALARM: TIM1 clock 8000000 Hz, PSC=7, ARR=999 -> 1000 Hz PWM
+MotionTask started
+InputTask started
+SensorTask started
+AlarmTask started
+StateTask started
+DisplayTask started
+DISPLAY: I2C init=0 err=0x00000000 probe=0 err=0x00000000
+DISPLAY: OLED initialised
+```
+
+The six tasks start once the scheduler runs. The order above is the one observed, but it isn't guaranteed. About 2 s later SensorTask logs its first sample, then one every 2 s:
+
+```
+Temperature: 24.00 C, Humidity: 40.00 %, Light: 24 %, Motion: no
+```
+
+The values depend on the Wokwi part controls. The other messages appear as the system reacts:
+
+| **Message** | **Meaning** |
+|---|---|
+| `MOTION: detected` / `MOTION: clear` | The PIR output went high / low |
+| `STATE: INACTIVE (no motion for 15 s)` | No motion for 15 s: OLED blanked, sensing pauses and encoder changes are ignored |
+| `STATE: ACTIVE (motion)` | Motion woke the system and returned it to ACTIVE |
+| `INPUT: mode TEMPERATURE` (or `HUMIDITY`, `LIGHT`, `MOTION`) | The encoder changed the OLED screen |
+| `INPUT: button pressed` | The encoder knob was pressed |
+| `ALARM: temperature LOW` / `HIGH` / `NORMAL` | The temperature moved below / above / back inside 18.0-30.0 °C |
+| `ALARM: buzzer on` / `ALARM: buzzer off` | The buzzer started / stopped |
+| `DHT22: read failed (<reason>), sample skipped` | A DHT22 read failed; that 2 s sample is skipped |
+| `Temperature: ...` / `Humidity: ...` / `Light: ...` | SensorTask logged the latest temperature, humidity and relative-light readings |
+| `DISPLAY: OLED initialised` | DisplayTask successfully initialized the SSD1306 OLED |
+| `CLOCK: core=...` | Startup clock frequencies reported by the firmware |
+ 
+### Using the controls
+
+- **DHT22:** click the sensor to open its temperature and humidity controls. A new value appears in the next sample, within 2 s. A temperature below 18.0 °C or above 30.0 °C sounds the buzzer and shows the corresponding alarm state on the OLED.
+- **Light sensor:** click the photoresistor module to open its light control. The firmware reports light as a 0-100 % relative level, not lux: brighter gives a higher percentage.
+- **PIR:** click the sensor, then click **Simulate Motion** in the popup. The output stays high for Wokwi's default period, then `MOTION: clear` follows.
+- **Rotary encoder:** click the arrows on the encoder to turn it clockwise (TEMPERATURE → HUMIDITY → LIGHT → MOTION → TEMPERATURE) or counterclockwise (the reverse order). Click the knob to press its button.
+
+**Keep the system ACTIVE while testing.** After 15 s without motion the system goes INACTIVE. The OLED goes blank, sensor sampling pauses and encoder changes are ignored; the PIR is still monitored and the heartbeat LED keeps toggling. Trigger the PIR to wake it. Step-by-step functional tests and fault experiments, with recorded results, are in [`docs/test-plan.md`](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/docs/test-plan.md).
+
+The FreeRTOS scheduler runs correctly in Wokwi under the project's custom port. Why a custom port is needed is covered under [Engineering Decisions](https://github.com/johnwieljayme/bca182-freertos-multisensor#engineering-decisions).
 
 ## Unit Testing
 
