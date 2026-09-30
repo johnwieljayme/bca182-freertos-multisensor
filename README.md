@@ -122,7 +122,9 @@ The firmware uses STM32Cube HAL and FreeRTOS; Arduino framework and Arduino APIs
 
 ## Running the Wokwi Simulation
 
-[Wokwi circuit: STM32F103C8 Blue Pill wired to the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/docs/screenshots/wokwi-circuit.PNG) ([image](https://github.com/johnwieljayme/bca182-freertos-multisensor/raw/main/docs/screenshots/wokwi-circuit.PNG))
+![Wokwi circuit: STM32F103C8 Blue Pill wired to the SSD1306 OLED, DHT22, LDR, PIR sensor, rotary encoder and buzzer](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/docs/screenshots/wokwi-circuit.PNG)
+
+([image](https://github.com/johnwieljayme/bca182-freertos-multisensor/raw/main/docs/screenshots/wokwi-circuit.PNG))
 
 *The full circuit in Wokwi, as defined in [`diagram.json`](https://github.com/johnwieljayme/bca182-freertos-multisensor/blob/main/diagram.json). The OLED and serial terminal show the running multisensor system during verification.*
 
